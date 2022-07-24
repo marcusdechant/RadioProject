@@ -7,7 +7,7 @@
 #v0.1.2
 
 #verbose
-script = 'dbQ.rx.py'
+script = 'dbQ.rx.dev.py'
 v = 'v0.1.2'
 author = 'Marcus Dechant (c)'
 verbose =('\n'+script+' - ('+v+') - '+author+'\n')

@@ -7,7 +7,7 @@
 #v3.0.4
 
 #verbose
-script = 'RadioRX.py'
+script = 'RadioRX.dev.py'
 v = 'v3.0.4'
 author = 'Marcus Dechant (c)'
 verbose =('\n'+script+' - ('+v+') - '+author+'\n')
@@ -140,7 +140,7 @@ try:
         
         try:
             data = str(packet, 'ascii')
-            #data = LID,RLID/EID,Delay,Code,Temp,Humi,bTemp,RSSI,SNR
+            #data = LID,RLID,TYME,DELAY,CODE,TEMP,HUMI,bTEMP,RSSI,SNR,DATE
             part = data.split(',')
             loop = int(part[0])
             delay = int(part[1])
@@ -173,7 +173,7 @@ try:
         except TypeError:
             #print(str(packet)+'\n')
             EID2 += 1
-            ERR1 = 'Err2'
+            ERR2 = 'Err2'
             data = (str(LID)+c+str(EID2)+c+c+ERR2+c+c+c+c+rxData+c+datetyme)            
             
             xcte('''
