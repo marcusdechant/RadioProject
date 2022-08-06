@@ -4,11 +4,11 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #RadioRX.py
-#v3.0.4
+#v3.0.5
 
 #verbose
 script = 'RadioRX.dev.py'
-v = 'v3.0.4'
+v = 'v3.0.5'
 author = 'Marcus Dechant (c)'
 verbose =('\n'+script+' - ('+v+') - '+author+'\n')
 print(verbose)
@@ -43,7 +43,7 @@ c = ','
 
 #database
 cnct = sql.connect
-database = ('radio.db')
+database = ('./database/radio.db')
 db = cnct(database)
 
 #database constructors

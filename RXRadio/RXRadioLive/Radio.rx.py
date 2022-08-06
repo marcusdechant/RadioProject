@@ -1,6 +1,8 @@
 #!/bin/python3/Radio
-script = 'RadioRX.py'
-v = 'v3.0.4'
+#Marcus Dechant (c)
+#v3.0.5
+script = 'RadioRX.dev.py'
+v = 'v3.0.5'
 author = 'Marcus Dechant (c)'
 verbose =('\n'+script+' - ('+v+') - '+author+'\n')
 print(verbose)
@@ -25,7 +27,7 @@ EID2 = 0
 LID = 0
 c = ','
 cnct = sql.connect
-database = ('radio.db')
+database = ('./database/radio.db')
 db = cnct(database)
 xcte = db.execute
 save = db.commit
@@ -74,9 +76,10 @@ try:
         date = datetime.now().strftime('%d/%m/%Y')
         tyme = datetime.now().strftime('%H:%M:%S')
         datetyme = (tyme+c+date)
-        rxData = (str(rssi) +c+ str(snr))    
+        rxData = (str(rssi) +c+ str(snr))
         try:
             data = str(packet, 'ascii')
+            #LID,RLID,TYME,DELAY,CODE,TEMP,HUMI,bTEMP,RSSI,SNR,DATE
             part = data.split(',')
             loop = int(part[0])
             delay = int(part[1])
@@ -85,28 +88,25 @@ try:
             humi = float(part[4])
             bTemp = float(part[5])
             data = (str(LID)+c+data+c+rxData+c+datetyme)
-            xcte('''
-            INSERT INTO RADIO (LID,RLID,TYME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
-                              (LID,loop,tyme,delay,code,temp,humi,bTemp,rssi,snr,date))
+            xcte('''INSERT INTO RADIO (LID,RLID,TYME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE)
+                               VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                                      (LID,loop,tyme,delay,code,temp,humi,bTemp,rssi,snr,date))    
         except ValueError:
             EID1 += 1
             ERR1 = 'Err1'
             data = (str(LID)+c+str(EID1)+c+c+ERR1+c+c+c+c+rxData+c+datetyme)
-            xcte('''
-            INSERT INTO ERROR (LID,EID,TYME,CODE,RSSI,SNR,DATE)
-                       VALUES (?,?,?,?,?,?,?)''',
-                              (LID,EID1,tyme,ERR1,rssi,snr,date))
+            xcte('''INSERT INTO ERROR (LID,EID,TYME,CODE,RSSI,SNR,DATE)
+                               VALUES (?,?,?,?,?,?,?)''',
+                                      (LID,EID1,tyme,ERR1,rssi,snr,date))
             radio.reset()
             radio = rfm9x(SPI, CS, RST, RF)
         except TypeError:
             EID2 += 1
             ERR2 = 'Err2'
             data = (str(LID)+c+str(EID2)+c+c+ERR2+c+c+c+c+rxData+c+datetyme)            
-            xcte('''
-            INSERT INTO ERROR (LID,EID,TYME,CODE,RSSI,SNR,DATE)
-                       VALUES (?,?,?,?,?,?,?)''',
-                              (LID,EID2,tyme,ERR2,rssi,snr,date))
+            xcte('''INSERT INTO ERROR (LID,EID,TYME,CODE,RSSI,SNR,DATE)
+                               VALUES (?,?,?,?,?,?,?)''',
+                                      (LID,EID2,tyme,ERR2,rssi,snr,date))
             radio.reset()
             radio = rfm9x(SPI, CS, RST, RF)
         save()

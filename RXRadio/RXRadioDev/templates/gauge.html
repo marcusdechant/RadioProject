@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<!--
+RadioProject
+Remote Sensor
+Marcus Dechant (c)
+Gauge Webpage
+v0.3.0
+-->
+
+<html>
+    <head>
+        <link rel="shortcut icon" href="#">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Gauges</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.7/gauge.min.js"></script>
+        <!-- Gauge Docs: https://bernii.github.io/gauge.js/ -->
+        <link rel="stylesheet" href='../static/css/style.css'/>
+        <script> //src='../static/js/refresh.0.0.1.dev.js' DONT WORK //auto refresh
+            function timedRefresh(timeoutPeriod) {
+                setTimeout("location.reload(true);", timeoutPeriod);
+            }
+            window.onload = timedRefresh({{ refreshValue }}); //refresh value is Delay x 1000
+        </script>
+   </head>
+   <body>
+        <!-- {{ ex }} returns a value defined in app.py in templateData-->
+        <!-- <div class=" "> is able to be formatted by CSS in style.css -->
+        <div class="header">
+            <h1>Current Enviroment</h1>
+            <h3>RadioProject</br>
+            Reading Gauges</h3>
+            Dev v0.2.9
+        </div>
+        </br>
+        <div class="nav">
+            <a href="/graph?x={{xG}}" class="button">Reading Graph</a>
+            <a href="/radiostat?x={{xR}}" class="button">Radio Status</a>
+            <!--<a href="/temp" class="button">Temp</a>-->
+        </div>
+        <div class="content">
+            <div class="gauge">
+                <div class="tGauge">
+                    <canvas id="TempGauge"></canvas>
+                    <label>{{TEMP}} &deg;C</label>
+                </div>
+                <div class="between">
+                    <h2>{{DATE}}</h2>
+                    RSSI: {{RSSI}} dBm</br>
+                    SNR: {{SNR}} dB</br>
+                    Pico Temp: {{BTEMP}} &deg;C</br>
+                    Last Read at {{TIME}} </br>
+                    Code: <span style="color:#{{COLOR}}">{{CODE}}</span> </br>
+                </div>
+                <div class="hGauge">
+                    <canvas id="HumiGauge" ></canvas>
+                    <label>{{HUMI}} %</label>
+                </div>
+            </div>
+        </div>
+        <div class="footer"></div>
+        <!-- JavaScript -->
+        <script>
+            <!--Gauge Script-->
+            var optsTemp = {
+                angle: -0, // The span of the gauge arc
+                lineWidth: 0.4, // The line thickness
+                radiusScale: 0.95, // Relative radius
+                pointer: {
+                    length: 0.6, // // Relative to gauge radius
+                    strokeWidth: 0.035, // The thickness
+                    color: '#6D6D6D' // Fill color
+                },
+                limitMax: false,     // If false, max value increases automatically if value > maxValue
+                limitMin: false,     // If true, the min value of the gauge will be fixed
+                staticZones: [
+                    {strokeStyle: "red", min: 0, max: 12.4},
+                    {strokeStyle: "orange", min: 12.5, max: 18.9},
+                    {strokeStyle: "green", min: 19, max: 25.9 },
+                    {strokeStyle: "orange", min: 26, max: 32.5},
+                    {strokeStyle: "red", min: 32.6, max: 45},
+                ],
+                strokeColor: '#E0E0E0',  // to see which ones work best for you
+                highDpiSupport: true,     // High resolution support
+                staticLabels: {
+                    font: "10px sans-serif",
+                    labels: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
+                    color: "#6D6D6D",
+                },
+            };
+            var optsHumi = {
+                angle: -0, // The span of the gauge arc
+                lineWidth: 0.4, // The line thickness
+                radiusScale: 0.95, // Relative radius
+                pointer: {
+                    length: 0.6, // // Relative to gauge radius
+                    strokeWidth: 0.035, // The thickness
+                    color: '#6D6D6D' // Fill color
+                },
+                limitMax: false,     // If false, max value increases automatically if value > maxValue
+                limitMin: false,     // If true, the min value of the gauge will be fixed
+                staticZones: [
+                    {strokeStyle: "red", min: 0, max: 14.9},
+                    {strokeStyle: "orange", min:15 , max: 29.9},
+                    {strokeStyle: "green", min: 30, max: 84.9},
+                    {strokeStyle: "orange", min: 85, max: 100},
+                ],
+                strokeColor: '#E0E0E0',  // to see which ones work best for you
+                highDpiSupport: true,     // High resolution support
+                staticLabels: {
+                    font: "11px sans-serif",
+                    labels: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+                    color: "#6D6D6D",
+                },
+            };
+            
+            var temp = document.getElementById('TempGauge'); // your canvas element
+            var tempGauge = new Gauge(temp).setOptions(optsTemp); // create sexy gauge!
+            tempGauge.maxValue = 45; // set max gauge value
+            tempGauge.setMinValue(0);  // Prefer setter over gauge.minValue = 0
+            tempGauge.animationSpeed = 1; // set animation speed (32 is default value)
+            tempGauge.set({{TEMP}}); // set actual value
+            
+            var humi = document.getElementById('HumiGauge'); 
+            var humiGauge = new Gauge(humi).setOptions(optsHumi);
+            humiGauge.maxValue = 100;
+            humiGauge.setMinValue(0); 
+            humiGauge.animationSpeed = 1;
+            humiGauge.set({{HUMI}});
+        </script>
+    </body>
+</html>
+<!-- (c) Marcus Dechant -->
