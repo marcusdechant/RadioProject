@@ -1,33 +1,17 @@
-#!/bin/python3/Radio/dev
-
-#RadioProject
-#Remote Sensor Webpage
+#!/bin/python3/Radio
 #Marcus Dechant (c)
-#app.rx.dev.py
 #v0.1.0
-
-#import list
 import sqlite3 as sql
 import os
-
-#flask import list
 from flask import Flask
 from flask import render_template as template
 from flask import request
 from flask import flash
 from flask import redirect
 from flask import url_for as url4
-
-#werkzeug.utils import list
 from werkzeug.utils import secure_filename
-
-#global variables
 conn=sql.connect
-
-#flask app
 app=Flask(__name__)
-
-#/
 @app.route('/', methods=['GET'])
 def gauge():
     (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = gauge_data()
@@ -68,8 +52,6 @@ def gauge():
         'COLOR':color,
         'ex':None}
     return(template('gauge.html', **gaugeData)), 200
-    
-#/graph
 @app.route('/graph', methods=['GET'])
 def graph():
     (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = gauge_data()
@@ -131,8 +113,6 @@ def graph():
         'COLOR':color,
         'ex':None}
     return(template('graph.html', **graphData)), 200
-    
-#/radiostat
 @app.route('/radiostat', methods=['GET'])
 def radio_stats():
     (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = gauge_data()
@@ -176,8 +156,6 @@ def radio_stats():
         'x4W':x4W,
         'ex':None}
     return(template('radiostat.html', **radioData)), 200
-    
-#/graph button input
 @app.route('/graph', methods=['POST','GET'])
 def graph_input():
     if(request.method=='POST'):
@@ -185,8 +163,6 @@ def graph_input():
         inputData={'x':xID}
         return(redirect(url4('graph_input', **inputData))), 302
     return(template('graph.html')), 201
-    
-#/radiostat button input
 @app.route('/radiostat', methods=['POST','GET'])
 def radio_input():
     if(request.method=='POST'):
@@ -194,7 +170,6 @@ def radio_input():
         inputData={'x':xID}
         return(redirect(url4('radio_input', **inputData))), 302
     return(template('radiostat.html')), 201
-
 def gauge_data():
     database=r'./database/radio.db'
     db=conn(database)
@@ -217,7 +192,6 @@ def gauge_data():
         date=str(row[10])
     clse()
     return(lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date)
-
 def graph_data():
     database=r'./database/radio.db'
     db=conn(database)
@@ -225,7 +199,6 @@ def graph_data():
     clse=db.close
     DATANUM=request.args.get('x')
     try:
-        #DATANUM=-1
         curs=xcte('''SELECT * FROM RADIO ORDER BY LID DESC LIMIT %s''' %DATANUM)
     except:
         DATANUM = -1
@@ -253,6 +226,5 @@ def graph_data():
         snrGr.append(row[9])
     clse()
     return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, DATANUM)
-    
 if(__name__=='__main__'):
-    app.run(host='192.168.1.12', port=5001, debug=True)
+    app.run(host='192.168.1.12', port=5001, debug=False)
