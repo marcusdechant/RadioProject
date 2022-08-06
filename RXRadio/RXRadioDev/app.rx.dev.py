@@ -4,7 +4,7 @@
 #Remote Sensor Webpage
 #Marcus Dechant (c)
 #app.rx.dev.py
-#v0.0.3
+#v0.0.6
 
 #import list
 import sqlite3 as sql
@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 #global variables
 conn=sql.connect
 
-
 #flask app
 app=Flask(__name__)
 
@@ -35,7 +34,22 @@ def gauge():
     delay=int(dely)
     rV=int(delay*1000)
     if(delay==10):
+        base=delay*360
         rV=60000
+    if(delay==30):
+        base=delay*120
+    if(delay==60):
+        base=delay*60
+    x1=int(base/delay)
+    x24=int(x1*24)
+    if(code=='Good'):
+        color='00FF00'
+    if(code=='HighTemp'):
+        color='FF0000'
+    if(code=='LowTemp'):
+        color='0000FF'
+    if(code=='LowHumi'):
+        color='00BBBB'
     gaugeData={
         'LID':lid,
         'RLID':rlid,
@@ -49,6 +63,9 @@ def gauge():
         'SNR':snr,
         'DATE':date,
         'refreshValue':rV,
+        'xR':x1,
+        'xG':x24,
+        'COLOR':color,
         'ex':None}
     return(template('gauge.html', **gaugeData)), 200
     
@@ -56,9 +73,9 @@ def gauge():
 @app.route('/graph', methods=['GET'])
 def graph():
     (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = gauge_data()
-    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr) = graph_data()
+    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, DATANUM) = graph_data()
     delay=int(dely)
-    rv=delay*1000
+    rV=delay*1000
     if(delay==10):
         base=delay*360
         rV=60000
@@ -66,6 +83,9 @@ def graph():
         base=delay*120
     if(delay==60):
         base=delay*60
+    xH=int((int(DATANUM)/base)*delay)
+    if(xH==0):
+        xH='ALL'
     x1=int(base/delay)
     x3=int(x1*3)
     x6=int(x1*6)
@@ -91,12 +111,16 @@ def graph():
         'CODE':code,
         'TEMP':temp,
         'HUMI':humi,
+        'BTEMP':btmp,
+        'RSSI':rssi,
+        'SNR':snr,
         'TEMPGR':tempGr,
         'HUMIGR':humiGr,
-        'BTEMP':btmpGr,
-        'RSSI':rssiGr,
-        'SNR':snrGr,
+        'BTEMPGR':btmpGr,
+        'RSSIGR':rssiGr,
+        'SNRGR':snrGr,
         'refreshValue':rV,
+        'xH':xH,
         'x1':x1,
         'x3':x3,
         'x6':x6,
@@ -108,6 +132,51 @@ def graph():
         'ex':None}
     return(template('graph.html', **graphData)), 200
     
+#/radiostat
+@app.route('/radiostat', methods=['GET'])
+def radio_stats():
+    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = gauge_data()
+    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, DATANUM) = graph_data()
+    delay=int(dely)
+    rV=delay*1000
+    if(delay==10):
+        base=delay*360
+        rV=60000
+    if(delay==30):
+        base=delay*120
+    if(delay==60):
+        base=delay*60
+    xH=int((int(DATANUM)/base)*delay)
+    if(xH==0):
+        xH='ALL'
+    x1=int(base/delay)
+    x3=int(x1*3)
+    x6=int(x1*6)
+    x12=int(x1*12)
+    x24=int(x1*24)
+    xW=int(x24*7)
+    x4W=int(xW*4)
+    radioData={
+        'ITN':lid,
+        'LID':lidGr,
+        'DELAY':dely,
+        'RLID':rlid,
+        'RSSI':rssi,
+        'SNR':snr,
+        'RSSIGR':rssiGr,
+        'SNRGR':snrGr,
+        'refreshValue':rV,
+        'xH':xH,
+        'x1':x1,
+        'x3':x3,
+        'x6':x6,
+        'x12':x12,
+        'x24':x24,
+        'xW':xW,
+        'x4W':x4W,
+        'ex':None}
+    return(template('radiostat.html', **radioData)), 200
+    
 #/graph button input
 @app.route('/graph', methods=['POST','GET'])
 def graph_input():
@@ -116,6 +185,15 @@ def graph_input():
         inputData={'x':xID}
         return(redirect(url4('graph_input', **inputData))), 302
     return(template('graph.html')), 201
+    
+#/radiostat button input
+@app.route('/radiostat', methods=['POST','GET'])
+def radio_input():
+    if(request.method=='POST'):
+        xID=request.form['x']
+        inputData={'x':xID}
+        return(redirect(url4('radio_input', **inputData))), 302
+    return(template('radiostat.html')), 201
 
 def gauge_data():
     database=r'./database/radio.db'
@@ -147,13 +225,13 @@ def graph_data():
     clse=db.close
     DATANUM=request.args.get('x')
     try:
+        #DATANUM=-1
         curs=xcte('''SELECT * FROM RADIO ORDER BY LID DESC LIMIT %s''' %DATANUM)
     except:
         DATANUM = -1
         curs=xcte('''SELECT * FROM RADIO ORDER BY LID DESC LIMIT %s''' %DATANUM)
     fall=curs.fetchall
     data=reversed(fall())
-    
     lidGr=[]
     rlidGr=[]
     tymeGr=[]
@@ -174,7 +252,7 @@ def graph_data():
         rssiGr.append(row[8])
         snrGr.append(row[9])
     clse()
-    return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr)
+    return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, DATANUM)
     
 if(__name__=='__main__'):
     app.run(host='192.168.1.12', port=5001, debug=True)
