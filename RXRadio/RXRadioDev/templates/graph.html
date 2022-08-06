@@ -54,11 +54,11 @@ v5.5
             Code: <span style="color:#{{COLOR}}">{{CODE}}</span>
         </div>
         <div>
-            <div class="indexGraph" >
+            <div class="graph" >
                 <canvas id="mainChart" ></canvas>
             </div>
             
-            <div class="indexReadingBot">
+            <div class="graphBot">
                 Reading Delay {{DELAY}} Seconds </br>
                 Loop ID: {{ITN}} </br>
                 Remote Loop ID: {{RLID}}
@@ -66,6 +66,7 @@ v5.5
         </div>
     </body>
         <script>
+            
             var graph = document.getElementById("mainChart");
             var line_graph = new Chart(graph, {
                 type: 'line', //graph type
@@ -76,19 +77,19 @@ v5.5
                             label: 'Temperature ({{TEMP}}'+'\u00B0'+'C)', //legend title
                             data: {{TEMPGR}}, //y axis values
                             borderColor: 'rgb(0, 0, 255)', //line colour
-                            backgroundColor: 'rgb(0, 0, 255)', //fill legend box
+                            backgroundColor: 'rgb(0, 0, 255)' //fill legend box
                         },
                         {   //y axis 2 | Humidity
                             label: 'Humidity ({{HUMI}}%)',
                             data: {{HUMIGR}},
                             borderColor: 'rgb(255, 0, 0)',
-                            backgroundColor: 'rgb(255, 0, 0)',
+                            backgroundColor: 'rgb(255, 0, 0)'
                         },
                         {   //y axis 3 | Pico Board Temp
                             label: 'MC Tempurature ({{BTEMP}}'+'\u00B0'+'C)',
                             data: {{BTEMPGR}},
                             borderColor: 'rgb(0,255,0)',
-                            backgroundColor: 'rgb(0,255,0)',
+                            backgroundColor: 'rgb(0,255,0)'
                         }
                     ],
                 },

@@ -1,9 +1,9 @@
 /*
-#SHT Project
+#Radio Project
 #Webpage Styling
 #Marcus Dechant (c)
 #style.css
-#v0.2.3
+#v0.2.4
 */
 
 body {
@@ -68,11 +68,11 @@ label {
     height: auto;
     text-align: center;
 }
-.indexGraph {
+.graph {
     width: auto;
     height: 300px;
 }
-.indexReadingBot {
+.graphBot {
     font-size: 11px;
 }
 .gauge {
@@ -80,7 +80,7 @@ label {
    height: 300px;
    overflow: hidden;
 }
-.tgauge {
+.tGauge {
     width: 30%;
     height: 200px;
     margin-top: 50px;
@@ -100,36 +100,7 @@ label {
     margin-bottom: 50px;
     display: inline-block;
 }
-.hgauge {
-    width: 30%;
-    height: 200px;
-    margin-top: 50px;
-    margin-left: 3%;
-    margin-right: 3%;
-    margin-bottom: 50px;
-    display: inline-block;
-}
-.tgaugeMR {
-    width: 30%;
-    height: 200px;
-    margin-top: 50px;
-    margin-left: 3%;
-    margin-right: 3%;
-    margin-bottom: 50px;
-    display: inline-block;
-}
-.betweenMR {
-    font-size: 20px;
-    text-align: center;
-    width: 20%;
-    height: 200px;
-    margin-top: 10px;
-    margin-left: 2%;
-    margin-right: 2%;
-    margin-bottom: 50px;
-    display: inline-block;
-}
-.hgaugeMR {
+.hGauge {
     width: 30%;
     height: 200px;
     margin-top: 50px;
