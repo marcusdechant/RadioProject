@@ -66,7 +66,7 @@ while path (r'RadioLogs/radioTest.%s.csv' %LogID):
     LogID += 1
 with open(r'RadioLogs/radioTest.%s.csv' %LogID, 'w') as log:
     log.write('LID, ID, Delay, Code, TempC, Humi, BoTempC, RSSI, SNR, TIME, DATE\n')
-print('LID, ID, Delay, Code, TempC, Humi, BoTempC, RSSI, SNR, TIME, DATE\n')
+print('LID, ID, Delay, Code, TempC, Humi, BoTempC, RSSI, SNR, TIME, DATE')
 try:
     while True:
         LID += 1
@@ -110,7 +110,7 @@ try:
             radio.reset()
             radio = rfm9x(SPI, CS, RST, RF)
         save()
-        print(data+'\n')
+        print(data)
         with open(r'RadioLogs/radioTest.%s.csv' %LogID, 'a') as log:
             log.write(data + '\n')
 except KeyboardInterrupt:
