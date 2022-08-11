@@ -37,9 +37,9 @@ clse=db.close
 #RX database
 if(table=='1')or(table=='Radio'): 
     #query all from database
-    cur=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE FROM RADIO''')
+    cur=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO''')
     #database header
-    print('\nlid-rlid, time, delay, code, temp, humi, btemp, rssi, snr, date')
+    print('\nlid-rlid, time, delay, code, temp, humi, btemp, rssi, snr, txpwr, date')
     #select contents from database
     for row in cur:
         r0=str(row[0])
@@ -53,8 +53,9 @@ if(table=='1')or(table=='Radio'):
         r8=str(row[8])
         r9=str(row[9])
         r10=str(row[10])
+        r11=str(row[11])
         #displays contents of database
-        print(r0+d+r1+c+r2+c+r3+c+r4+c+r5+c+r6+c+r7+c+r8+c+r9+c+r10)
+        print(r0+d+r1+c+r2+c+r3+c+r4+c+r5+c+r6+c+r7+c+r8+c+r9+c+r10+c+r11)
 
 #error database
 elif(table=='2')or(table=='Error'):
