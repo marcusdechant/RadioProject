@@ -1,8 +1,0 @@
-LoRa Radio Information
-Model: RFM95C
-FCC ID: 2ASEORFM95C
-Output: +20dBm
-Vin: 3.3-5.5v
-SPI Logic: 3-5V safe
-MAC: 98:76:B6:11:F1:38
-Frequency: 915 MHz
