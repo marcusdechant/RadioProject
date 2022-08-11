@@ -1,7 +1,0 @@
-Temperature and Humidity Sensor Infomation
-Model: SHT30
-Power: 2.15-5.5V
-Humi: 0 . . . 100 %RH
-Temp: -40 . . . 125 *C
-Precision: +-2%RH +-0.2*C
-Output: DIO (ic2)
