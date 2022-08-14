@@ -4,7 +4,7 @@
 #Remote Sensor Webpage
 #Marcus Dechant (c)
 #app.rx.dev.py
-#v0.1.3
+#v0.1.5
 
 #import list
 import sqlite3 as sql
@@ -23,7 +23,7 @@ from werkzeug.utils import secure_filename
 
 #global variables
 conn=sql.connect
-database=r'./database/radio.3.db'
+database=r'./database/radio.1.db'
     
 #flask app
 app=Flask(__name__)
@@ -35,7 +35,7 @@ def single_data():
     xcte=db.execute
     clse=db.close
     #pull all from table radio
-    curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE FROM RADIO''')
+    curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO''')
     data=curs.fetchall()
     #iterate for last reading
     for row in data:
@@ -49,10 +49,11 @@ def single_data():
         btmp=str(row[7])
         rssi=str(row[8])
         snr=str(row[9])
-        date=str(row[10])
+        pwr=str(row[10])
+        date=str(row[11])
     clse()
     #return most recent reading
-    return(lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date)
+    return(lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date)
 
 #historical readings
 def all_data():
@@ -63,11 +64,11 @@ def all_data():
     #xaxis determines how far back the graph goes.
     xaxis=request.args.get('x')
     try:
-        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
+        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
     except:
         #exception raised when no readings exist in database to handle this the exception is passed as all readings
         xaxis=(-1)
-        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
+        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
     #get all readings and reverse the order (SQL query returns backwards)
     data=reversed(curs.fetchall())
     #reading arrays
@@ -80,6 +81,7 @@ def all_data():
     btmpGr=[]
     rssiGr=[]
     snrGr=[]
+    pwrGr=[]
     #fill arrays
     for row in data:
         lidGr.append(row[0])
@@ -91,9 +93,10 @@ def all_data():
         btmpGr.append(row[7])
         rssiGr.append(row[8])
         snrGr.append(row[9])
+        pwrGr.append(row[10])
     clse()
     #return historical readings
-    return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, xaxis)
+    return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, pwrGr, xaxis)
 
 #/
 #address and request method
@@ -101,7 +104,7 @@ def all_data():
 #dash
 def gauge():
     # variables from gauge_data() (most recent reading)
-    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = single_data()
+    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date) = single_data()
     #redefine dely as an integer
     delay=int(dely)
     #refresh value delay * 1000
@@ -137,23 +140,8 @@ def gauge():
         #teal
         color='00BBBB'
     #data passed to gauge webpage
-    gaugeData={
-        'LID':lid,
-        'RLID':rlid,
-        'TIME':tyme,
-        'DELAY':dely,
-        'CODE':code,
-        'TEMP':temp,
-        'HUMI':humi,
-        'BTEMP':btmp,
-        'RSSI':rssi,
-        'SNR':snr,
-        'DATE':date,
-        'refreshValue':rV,
-        'xR':x1,
-        'xG':x24,
-        'COLOR':color,
-        'ex':None}
+    gaugeData={'LID':lid, 'RLID':rlid, 'TIME':tyme, 'DELAY':dely, 'CODE':code, 'TEMP':temp, 'HUMI':humi, 'BTEMP':btmp,
+               'RSSI':rssi, 'SNR':snr, 'PWR':pwr, 'DATE':date, 'refreshValue':rV, 'xR':x1, 'xG':x24, 'COLOR':color, 'ex':None}
     return(template('gauge.html', **gaugeData)), 200 #200 = OK
     
 #/graph
@@ -161,9 +149,9 @@ def gauge():
 #reading graphs
 def graph():
     #variables from single_data() (most recent reading)
-    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = single_data()
+    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date) = single_data()
     #variables from graph_data() (all reading)
-    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, xaxis) = all_data()
+    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, pwrGr, xaxis) = all_data()
     delay=int(dely)
     rV=delay*1000
     if(delay==10):
@@ -198,39 +186,18 @@ def graph():
     if(code=='LowHumi'):
         color='00BBBB'
     #data passed to reading graphs
-    graphData={
-        'ITN':lid,
-        'LID':lidGr,
-        'RLID':rlid,
-        'DELAY':dely,
-        'CODE':code,
-        'TEMP':temp,
-        'HUMI':humi,
-        'RSSI':rssi,
-        'SNR':snr,
-        'TEMPGR':tempGr,
-        'HUMIGR':humiGr,
-        'RSSIGR':rssiGr,
-        'SNRGR':snrGr,
-        'refreshValue':rV,
-        'xH':xH,
-        'x1':x1,
-        'x3':x3,
-        'x6':x6,
-        'x12':x12,
-        'x24':x24,
-        'xW':xW,
-        'x4W':x4W,
-        'COLOR':color,
-        'ex':None}
+    graphData={'ITN':lid, 'RLID':rlid, 'DELAY':dely, 'CODE':code, 'TEMP':temp, 'HUMI':humi, 
+               'RSSI':rssi, 'SNR':snr, 'LID':lidGr, 'TEMPGR':tempGr, 'HUMIGR':humiGr, 'RSSIGR':rssiGr,
+               'SNRGR':snrGr, 'refreshValue':rV, 'xH':xH, 'x1':x1, 'x3':x3, 'x6':x6, 
+               'x12':x12, 'x24':x24, 'xW':xW,  'x4W':x4W, 'COLOR':color, 'ex':None}
     return(template('graph.html', **graphData)), 200
     
 #/radiostat
 @app.route('/radiostat', methods=['GET'])
 #radio status graphs
 def radio_stats():
-    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, date) = single_data()
-    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, xaxis) = all_data()
+    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date) = single_data()
+    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, pwrGr, xaxis) = all_data()
     delay=int(dely)
     rV=delay*1000
     if(delay==10):
@@ -251,27 +218,9 @@ def radio_stats():
     xW=int(x24*7)
     x4W=int(xW*4)
     #data passed to radio status graphs
-    radioData={
-        'ITN':lid,
-        'LID':lidGr,
-        'DELAY':dely,
-        'RLID':rlid,
-        'RSSI':rssi,
-        'SNR':snr,
-        'BTEMP':btmp,
-        'RSSIGR':rssiGr,
-        'SNRGR':snrGr,
-        'BTEMPGR':btmpGr,
-        'refreshValue':rV,
-        'xH':xH,
-        'x1':x1,
-        'x3':x3,
-        'x6':x6,
-        'x12':x12,
-        'x24':x24,
-        'xW':xW,
-        'x4W':x4W,
-        'ex':None}
+    radioData={'ITN':lid, 'LID':lidGr, 'DELAY':dely, 'RLID':rlid, 'RSSI':rssi, 'SNR':snr, 'PWR':pwr,
+               'BTEMP':btmp, 'RSSIGR':rssiGr, 'SNRGR':snrGr, 'PWRGR':pwrGr, 'BTEMPGR':btmpGr, 'refreshValue':rV, 
+               'xH':xH, 'x1':x1, 'x3':x3, 'x6':x6, 'x12':x12, 'x24':x24, 'xW':xW, 'x4W':x4W, 'ex':None}
     return(template('radiostat.html', **radioData)), 200
     
 #changes graph x axis with buttons
