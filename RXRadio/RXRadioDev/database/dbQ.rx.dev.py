@@ -4,11 +4,11 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #dbQ.rx.py
-#v0.1.5
+#v0.1.7
 
 #verbose
 script = 'dbQ.rx.dev.py'
-v = 'v0.1.5'
+v = 'v0.1.7'
 author = 'Marcus Dechant (c)'
 verbose =('\n'+script+' - ('+v+') - '+author+'\n')
 print(verbose)
