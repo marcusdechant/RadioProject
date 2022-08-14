@@ -4,13 +4,13 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #RadioRX.py
-#v3.1.2
+#v3.1.4
 
 #Change LEID to ESID
 
 #verbose
 script='RadioRX.dev.py'
-v='v3.1.2'
+v='v3.1.4'
 author='Marcus Dechant (c)'
 verbose=('\n'+script+' - ('+v+') - '+author+'\n')
 print(verbose)
@@ -22,7 +22,9 @@ import digitalio as DIO
 import adafruit_rfm9x as RFM
 import os
 import sqlite3 as sql
+
 from datetime import datetime
+
 #constructors
 path=os.path.exists
 mkdir=os.mkdir
@@ -47,9 +49,8 @@ LogID=0
 #signal error triggers
 rssiLo=(-120)
 snrLo=5.5
-snrHi=11
 snrNeg=(0)
-snrLoNeg=(-10)
+snrLoLo=(-10)
 
 #delimiters and units
 c=', '
@@ -128,7 +129,7 @@ xcte('''CREATE TABLE IF NOT EXISTS RSALL (
 xcte('''CREATE TABLE IF NOT EXISTS ERROR1 (
         LID     INT     NOT NULL    PRIMARY KEY,
         EID     INT     NOT NULL,
-        LEID    INT    NOT NULL,
+        LEID    INT     NOT NULL,
         TIME    TEXT    NOT NULL,
         RSSI    REAL    NOT NULL,
         SNR     REAL    NOT NULL,
@@ -193,6 +194,12 @@ with(open(r'radiologs/radio.err.pkt.csv', 'w') as pkt):
 
 #printout header
 print("id, delay(s), code, temperatrue(C), humidity(%), board-temp(C), rssi(dBm), snr(dB), tx-power(dB), time, date")
+
+def datetyme():
+    tyme=datetime.now()strftime('%d/%m/%Y')
+    tyme=datetime.now().strftime('%H:%M:%S')
+    datetyme=tyme+c+date
+    return(datetyme)
 
 #primary main loop
 try:
@@ -280,6 +287,8 @@ try:
                 xcte('''INSERT INTO RADIO (LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE)
                                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
                                           (LID,loop,tyme,delay,code,temp,humi,btemp,rssi,snr,txpwr,date))
+                                          
+            """
             #OBSOLETE
             #error3 is catching all error1s 
             #incase of ValueError, process Error1
@@ -299,7 +308,9 @@ try:
                                     VALUES (?,?,?,?,?,?,?)''',
                                            (LID,EID,EID1,tyme,rssi,snr,date))  
                 radio.reset()
-                radio=rfm9x(SPI,CS,RST,RF)           
+                radio=rfm9x(SPI,CS,RST,RF) 
+            """
+            
             #Incase of TypeError, process Error2
             except(TypeError):
                 EID+=1
