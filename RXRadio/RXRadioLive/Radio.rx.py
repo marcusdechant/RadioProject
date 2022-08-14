@@ -21,7 +21,7 @@ SPI = BU.SPI(BO.SCK, MOSI=BO.MOSI, MISO=BO.MISO)
 CS = digIO(BO.CE1)
 RST = digIO(BO.D25)
 RF = 915.0
-radio = rfm9x(SPI, CS, RST, RF)
+radio = rfm9x(SPI, CS, RST, RF, high_power=True)
 EID1 = 0
 EID2 = 0
 LID = 0
@@ -72,11 +72,14 @@ try:
         LID += 1
         packet = radio.receive(timeout=90)
         rssi = radio.rssi
+        lrssi = radio.last_rssi
+        drssi = lrssi-rssi
         snr = radio.snr
+        bw = radio.signal_bandwidth
         date = datetime.now().strftime('%d/%m/%Y')
         tyme = datetime.now().strftime('%H:%M:%S')
         datetyme = (tyme+c+date)
-        rxData = (str(rssi) +c+ str(snr))
+        rxData = (str(rssi)+c+str(snr))
         try:
             data = str(packet, 'ascii')
             #LID,RLID,TYME,DELAY,CODE,TEMP,HUMI,bTEMP,RSSI,SNR,DATE
