@@ -3,7 +3,14 @@
 #Marcus Dechant (c)
 #pico beta
 #main.py
-#v1.1.3
+#v1.1.4
+
+#verbose
+script='main.py'
+v='v1.1.4'
+author='Marcus Dechant (c)'
+verbose=('\n'+script+' - ('+v+') - '+author+'\n')
+print(verbose)
 
 #import list
 from sht import t
@@ -15,6 +22,7 @@ import busio as bu
 import time as ti
 import microcontroller as mc
 
+#local variables
 #Constructors
 sl=ti.sleep
 dio=DIO.DigitalInOut
@@ -28,8 +36,9 @@ rst=dio(bo.GP15)
 #RF Frequency (MHz)
 rf=915.0
 
-#High Power Level (max=19dB, min=5dB)
-pwr=5
+#High Power Level (max=19dB, min=5dB, +19dB cause board crashes)
+pwr=20
+spf=11
 
 #Radio Object
 radio=rfm(spi, cs, rst, rf, high_power=True)
@@ -48,7 +57,7 @@ ledel=0.5
 c=','
 
 #reading range triggers
-tempHi=25.01
+tempHi=25
 tempLo=20
 humiHi=85
 humiLo=30
@@ -56,6 +65,7 @@ humiLo=30
 #dynamic power change trigger
 a=120 #loops (120*30s=3600s=1h@30s)
 
+#functions
 def mct(): #board temp function
     bt=('{0:0.2f}'.format(mc.cpu.temperature))
     return(bt)
@@ -97,18 +107,20 @@ while(True): #Main Loop
     #EXPERIMENTAL
     #Dynamic TX Power Test
     #pwr in dB
-    if(lid==a): #if lid = a (120 base)
-        a+=a #when triggered a will become thee next hour, ((120+120=240)*30=7200=2h@30s)
-        if(pwr>19): #if power level = +19 it is reverted to 5 (lowest)
-            pwr=5
-        else: #pwr increases by 1 every 120 loops (1 hour)
-            pwr+=1
+    #if(lid==a): #if lid = a (120 base)
+    #    a+=120 #when triggered a will become thee next hour, ((120+120=240)*30=7200=2h@30s)
+    #    if(pwr>19): #if power level = +19 it is reverted to 5 (lowest)
+    #        pwr=5
+    #    else: #pwr increases by 1 every 120 loops (1 hour)
+    #        pwr+=1
+    data=data+c+str(pwr)
     radio.tx_power=pwr
-    
+    #radio.spreading_factor=spf
     #Send Data to RXRadio
     radio.send(data)
     #print data to user
-    print(data+c+str(pwr))
+    print(data)
+    #can be in function
     #Led Indicates Data is Sent
     led.value=False
     sl(ledel)
