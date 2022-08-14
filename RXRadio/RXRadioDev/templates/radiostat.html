@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 Marcus Dechant (c)
-v5.4.4
+v5.4.6
 -->
 <html>
     <head>
@@ -23,7 +23,7 @@ v5.4.4
         <div class="header">
             <h1>Radio Status</h1>
             <h3>RadioProject</h3>
-            Dev v5.4.4
+            Dev v5.4.6
         </div></br>
         <div class="nav">
             <form method="POST">
@@ -43,12 +43,15 @@ v5.4.4
             Last {{xH}} hour(s)
         </div>
         <div>
-            <div class="graph" >
+            <div class="graphST" >
                 <canvas id="RSSIChart" ></canvas>
             </div></br>
-            <div class="graph" >
+            <div class="graphST" >
                 <canvas id="SNRChart" ></canvas>
-            </div>
+            </div></br>
+            <div class="graphST" >
+                <canvas id="BTmpChart" ></canvas>
+            </div></br>
             <div class="graphBot">
                 Reading Delay {{DELAY}} Seconds</br>
                 Loop ID: {{ITN}}</br>
@@ -83,16 +86,43 @@ v5.4.4
                         }
                     }
                 });
-           var SNRgraph = document.getElementById("SNRChart");
+            var SNRgraph = document.getElementById("SNRChart");
             var line_graph = new Chart(SNRgraph, {
                 type: 'line',
                 data: {
                     labels: {{LID}},
+                    datasets: [{   
+                        label: 'Signal-to-Noise Ratio ({{SNR}} dB)',
+                        data: {{SNRGR}},
+                        borderColor: 'rgb(255, 0, 0)', 
+                        backgroundColor: 'rgb(255, 0, 0)'}]},
+                options: {
+                    plugins: {legend: {labels: {color: 'gray'}}},
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {point: {radius: 0}},
+                    scales: {
+                        y: {grid: {
+                                color: 'white',
+                                borderColor: 'white'},
+                            ticks: {color: '#6D6D6D'}},
+                        x: {grid: {display: false},
+                            ticks: {
+                                beginAtZero: true,
+                                display: false}}
+                        }
+                    }
+                });
+            var BTmpgraph = document.getElementById("BTmpChart");
+            var line_graph = new Chart(BTmpgraph, {
+                type: 'line',
+                data: {
+                    labels: {{LID}},
                     datasets: [
-                        {   label: 'Signal-to-Noise Ratio ({{SNR}} dB)',
-                            data: {{SNRGR}},
-                            borderColor: 'rgb(255, 0, 0)', 
-                            backgroundColor: 'rgb(255, 0, 0)'}]},
+                        {   label: 'Pico Board Temperature ({{BTEMP}} '+'\u00B0'+'C)',
+                            data: {{BTEMPGR}},
+                            borderColor: 'rgb(0, 255, 0)', 
+                            backgroundColor: 'rgb(0, 255, 0)'}]},
                 options: {plugins: {legend: {labels: {color: 'gray'}}},
                     responsive: true,
                     maintainAspectRatio: false,

@@ -3,7 +3,7 @@
 #Webpage Styling
 #Marcus Dechant (c)
 #style.css
-#v0.2.4
+#v0.2.5
 */
 
 body {
@@ -70,7 +70,11 @@ label {
 }
 .graph {
     width: auto;
-    height: 300px;
+    height: 400px;
+}
+.graphST {
+    width: auto;
+    height: 200px;
 }
 .graphBot {
     font-size: 11px;
