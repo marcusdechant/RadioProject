@@ -40,6 +40,7 @@ RST=digIO(BO.D25)
 RF=915
 radio=rfm9x(SPI,CS,RST,RF)
 def radio_rst():
+    global radio
     radio.reset()
     radio=rfm9x(SPI,CS,RST,RF)
 
@@ -332,7 +333,7 @@ try:
         
         #save database inputs
         save()
-        #write to csv
+        #write to csv log
         with(open(r'radiologs/radio.%s.csv' %LogID, 'a') as log):
             log.write(datacsv+'\n')
         #print data to console
