@@ -223,6 +223,54 @@ def radio_stats():
                'xH':xH, 'x1':x1, 'x3':x3, 'x6':x6, 'x12':x12, 'x24':x24, 'xW':xW, 'x4W':x4W, 'ex':None}
     return(template('radiostat.html', **radioData)), 200
     
+#/graph
+@app.route('/graphs', methods=['GET'])
+#reading graphs
+def indv_graph():
+    #variables from single_data() (most recent reading)
+    (lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date) = single_data()
+    #variables from graph_data() (all reading)
+    (lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, pwrGr, xaxis) = all_data()
+    delay=int(dely)
+    rV=delay*1000
+    if(delay==10):
+        base=delay*360
+        rV=60000
+    if(delay==30):
+        base=delay*120
+    if(delay==60):
+        base=delay*60
+    #xH is the number of hours being displayed
+    xH=int((int(xaxis)/base)*delay)
+    #if xH is zero, it is showing all of the possible readings
+    if(xH==0):
+        xH='ALL'
+    #used to change number of graph readings
+    #x1 = 1 hour of readings (x axis=base/delay=1 hour)
+    x1=int(base/delay)
+    x3=int(x1*3) #x1*3 = 3 hours
+    x6=int(x1*6) #x1*6 = 6 hours
+    x12=int(x1*12) #x1*12 = 12 hours
+    x24=int(x1*24) #x1*24 = 24 hours
+    xW=int(x24*7) #x24*7 = 7 days
+    x4W=int(xW*4) #x7*4 = 4 weeks
+    #base color
+    color='FFFFFF'
+    if(code=='Good'):
+        color='00FF00'
+    if(code=='HighTemp'):
+        color='FF0000'
+    if(code=='LowTemp'):
+        color='0000FF'
+    if(code=='LowHumi'):
+        color='00BBBB'
+    #data passed to reading graphs
+    graphData={'ITN':lid, 'RLID':rlid, 'DELAY':dely, 'CODE':code, 'TEMP':temp, 'HUMI':humi, 
+               'RSSI':rssi, 'SNR':snr, 'LID':lidGr, 'TEMPGR':tempGr, 'HUMIGR':humiGr, 'RSSIGR':rssiGr,
+               'SNRGR':snrGr, 'refreshValue':rV, 'xH':xH, 'x1':x1, 'x3':x3, 'x6':x6, 
+               'x12':x12, 'x24':x24, 'xW':xW,  'x4W':x4W, 'COLOR':color, 'ex':None}
+    return(template('indvGraphs.html', **graphData)), 200
+    
 #changes graph x axis with buttons
 @app.route('/graph', methods=['POST','GET'])
 def graph_input():
@@ -239,6 +287,14 @@ def radio_input():
         inputData={'x':xID}
         return(redirect(url4('radio_input', **inputData))), 302
     return(template('radiostat.html')), 201
+
+@app.route('/graphs', methods=['POST','GET'])
+def indv_graph_input():
+    if(request.method=='POST'):
+        xID=request.form['x']
+        inputData={'x':xID}
+        return(redirect(url4('indv_graph_input', **inputData))), 302
+    return(template('indvGraphs.html')), 201
 
 if(__name__=='__main__'):
     app.run(host='192.168.1.12', port=5001, debug=True)

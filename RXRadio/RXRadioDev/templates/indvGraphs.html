@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 
 <!--
-Radio Project
-Remote Sensor
+AquaSolar
+Autonomous Gardening Project
 Marcus Dechant (c)
-Graph Webpage
-v5.6
+Individual Graphs Webpage
+v5.0.4
 -->
 
 <html>
@@ -22,16 +22,16 @@ v5.6
             function timedRefresh(timeoutPeriod) {
                 setTimeout("location.reload(true);", timeoutPeriod);
             }
-            window.onload = timedRefresh({{ refreshValue }}); //refresh value is Delay x 1000
+            window.onload = timedRefresh({{refreshValue}});
         </script>
     
     </head>
     <body>
         <div class="header">
             <h1>Current Enviroment</h1>
-            <h3>RadioProject</br>
-            Reading Graph</h3>
-            Dev v5.6
+            <h3>Radio Project</br>
+            Temperature / Humidity Graphs</h3>
+            Dev v5.0.4
         </div>
         </br>
         <div class="nav">
@@ -43,21 +43,23 @@ v5.6
                 <button name="x" value="{{x24}}" class="button">24 Hours</button>
                 <button name="x" value="{{xW}}" class="button">Last Week</button>
                 <button name="x" value="{{x4W}}" class="button">4 Weeks</button>
-                <a href="/graph" class="button">All</a>
+                <a href="/graphs" class="button">All</a>
                 <!--<button name="x" value="-1" class="button">All</button>-->
             </form>
             <a href="/" class="button">Home</a>
-            <a href="/graphs?x={{x12}}" class="button">Individual Graphs</a>
+            <a href="/graph?x={{x12}}" class="button">Combined Graph</a>
         </div>
         <div class="content">
-            Last {{xH}} hour(s) </br>
+            Last {{xH}} hour(s)</br>
             Code: <span style="color:#{{COLOR}}">{{CODE}}</span>
         </div>
         <div>
-            <div class="graph" >
-                <canvas id="mainChart" ></canvas>
+            <div class="graphST" >
+                <canvas id="tempChart" ></canvas>
             </div>
-            
+            <div class="graphST" >
+                <canvas id="humiChart" ></canvas>
+            </div>
             <div class="graphBot">
                 Reading Delay {{DELAY}} Seconds </br>
                 Loop ID: {{ITN}} </br>
@@ -67,8 +69,8 @@ v5.6
     </body>
         <script>
             
-            var graph = document.getElementById("mainChart");
-            var line_graph = new Chart(graph, {
+            var graph1 = document.getElementById("tempChart");
+            var line_graph1 = new Chart(graph1, {
                 type: 'line', //graph type
                 data: {
                     labels: {{LID}}, //x
@@ -79,7 +81,52 @@ v5.6
                             borderColor: 'rgb(0, 0, 255)', //line colour
                             backgroundColor: 'rgb(0, 0, 255)' //fill legend box
                         },
-                        {   //y axis 2 | Humidity
+                    ],
+                },
+                options: { 
+                    plugins: { 
+                        legend: { 
+                            labels: { 
+                                color: 'gray', //label text color
+                                }
+                            }
+                        },
+                    responsive: true, //css aspect ratio
+                    maintainAspectRatio: false, //css aspect ratio
+                    elements: {
+                        point: {
+                            radius: 0, //removes points (only leaves a line)
+                            },
+                        },
+                    scales: { 
+                        y: {
+                            grid: {
+                                color: 'white', //y axis line color
+                                borderColor: 'white', //zero line color
+                            },
+                            ticks: {
+                                color: '#6D6D6D', //y axis label text color
+                            },
+                        },
+                        x: { 
+                            grid: {
+                                display: false, //removes vertical gridlines
+                            },
+                            ticks: {
+                                beginAtZero: true, //css aspect ratio
+                                display: false, //removes x axis
+                            },
+                        },
+                    },
+                },
+            });
+            var graph2 = document.getElementById("humiChart");
+            var line_graph2 = new Chart(graph2, {
+                type: 'line', //graph type
+                data: {
+                    labels: {{LID}}, //x
+                    datasets: [
+                        {   //y axis | Humidity
                             label: 'Humidity ({{HUMI}}%)',
                             data: {{HUMIGR}},
                             borderColor: 'rgb(255, 0, 0)',
