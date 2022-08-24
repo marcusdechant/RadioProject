@@ -4,68 +4,65 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #RadioRX.py
-#v3.1.6
+#v3.1.7
 
 #Change LEID to ESID
 #Need UnicodeDecodeError handling
 #Change Coding to UTF-8 over ASCII
 
-#verbose
-script='RadioRX.dev.py'
-v='v3.1.6'
-author='Marcus Dechant (c)'
-verbose=('\n'+script+' - ('+v+') - '+author+'\n')
-print(verbose)
+name='Radio.rx.py'
+v='v3.1.7'
+cpyr=u'\u00A9'
+year=' 2022'
+author=' Marcus Dechant'
+verbose=(name+' - '+v+' - '+cpyr+year+author)
+print('\n'+verbose+'\n')
 
-#Import List
 import board as BO
 import busio as BU
-import digitalio as DIO
-import adafruit_rfm9x as RFM
-import os
-import sqlite3 as sql
 
-from datetime import datetime
+import sqlite3 as sql #PostgreSQL integration coming
 
-#constructors
-path=os.path.exists
-mkdir=os.mkdir
-digIO=DIO.DigitalInOut
+from datetime import datetime #import from dt.py
 
-#Radio Object (SPI)
-rfm9x=RFM.RFM9x
-SPI=BU.SPI(BO.SCK,MOSI=BO.MOSI,MISO=BO.MISO)
-CS=digIO(BO.CE1)
-RST=digIO(BO.D25)
-RF=915
-radio=rfm9x(SPI,CS,RST,RF)
+from digitalio import DigitalInOut as digiIO
+digIO=digiIO
+
+from os import mkdir
+from os.path import exists as path
+
+from adafruit_rfm9x import RFM9x as rfm9x
+
+spi=BU.SPI(BO.SCK,MOSI=BO.MOSI,MISO=BO.MISO)
+cs=digIO(BO.CE1)
+rst=digIO(BO.D25)
+rf=915 #MHz
+radio=rfm9x(spi,cs,rst,rf)
+
 def radio_rst():
+    global radio
     radio.reset()
-    radio=rfm9x(SPI,CS,RST,RF)
+    radio=rfm9x(spi,cs,rst,rf)
 
-#local variables
-EID=0
-EID1=0
-EID2=0
-EID3=0
-LID=0
-LogID=0
+EID=0 #Error ID
+EID1=0 #Error 1 ID
+EID2=0 #Error 2 ID
+EID3=0 #Error 3 ID
+LID=0 #Loop ID
+LogID=0 #Obsolete
 
-#signal error triggers
 rssiLo=(-120)
 snrLo=5.5
-snrNeg=(0)
+snrNeg=0
 snrLoLo=(-10)
 
-#delimiters and units
 c=', '
 d='-'
-tc='\u00b0'+'C'
+tc=('\u00b0'+'C')
 hd='%'
 dbm=' dBm'
 dec=' dB'
 
-#database
 cnct=sql.connect
 database=('./database/radio.1.db')
 logs=(r'./radiologs')
@@ -73,24 +70,6 @@ db=cnct(database)
 xcte=db.execute
 save=db.commit
 clse=db.close
-
-#reading database
-#LID = Loop ID
-#EID = General Error ID
-#ESID = Error Specific ID - LEID
-#SID = Secondary ID, used with RSALL Table
-#RLID = Remote Loop ID
-#TYME = time of reading
-#DELAY = time between readings
-#CODE = status descriptor
-#TEMP = SHT30 Temperature Reading
-#HUMI = SHT30 Relative Humidity Reading
-#BTEMP = Raspberry Pi Pico Board Temperature
-#RSSI = RFM95W Return Signal Strenght Indication
-#SNR = RFM95W Signal to Noise Ratio
-#PWR = TX power level in dB
-#DATE = date of reading
-#INFO = explains cause of error
 
 #main reading database
 xcte('''CREATE TABLE IF NOT EXISTS RADIO (
@@ -179,102 +158,58 @@ if(path(database)):
     for row in EID3last:
         EID3=int(row[0])
 
-#if logs directory does not exist, make it
 if not(path(logs)):
     mkdir(logs)
 
 #OBSOLETE (under review)
 #should be replaced with log continuation
-#if a log file exists make a new one
 while(path(r'radiologs/radio.%s.csv' %LogID)):
     LogID+=1
-
-#log file header
+    
 with(open(r'radiologs/radio.%s.csv' %LogID, 'w') as log):
     log.write('lid, rlid, delay(s), code, temperatrue('+tc+'), humidity(%), board-temp('+tc+'), rssi(dBm), snr(dB), tx-pwr(dB), time, date\n')
-
-#error packet tracking log file header
 with(open(r'radiologs/radio.err.pkt.csv', 'w') as pkt):
     pkt.write('id, error type, packet\n')
 
-#printout header
 print("id, delay(s), code, temperatrue(C), humidity(%), board-temp(C), rssi(dBm), snr(dB), tx-power(dB), time, date")
 
-#primary main loop
 try:
     while(True):
-        #add one to lid per loop
         LID+=1
-        #radio receive, wait 90s before error
-        packet=radio.receive(timeout=90)
-        #get rssi from last message
-        rssi=radio.rssi
-        #get snr from last message
-        snr=radio.snr
-        #format rx data to be included in data
+        packet=radio.receive(timeout=90) #wait for packets (max 90 seconds)
+        rssi=radio.rssi #rssi reading
+        snr=radio.snr #snr reading
         rxData=(str(rssi)+c+str(snr))
-        
-        #should be moved to function
-        #date
-        dayte=datetime.now().strftime('%d/%m/%Y')
-        #time
-        tyme=datetime.now().strftime('%H:%M:%S')
-        #format datetime to be included in data
+        dayte=datetime.now().strftime('%d/%m/%Y') #import from dt.py
+        tyme=datetime.now().strftime('%H:%M:%S') #import from dt.py
         datetyme=(tyme+c+dayte)
-        
-        #-3 is less than -1
-        # 3 is greater than 1
-        #-3 is less than 1
-        # 3 is greater than -1
-        
-        #if RSSI is lower than -120 (LoRa min) will result in error 3
-        #if SNR is lower than 0 (noise floor) will result in error 3
-        if(rssi<=rssiLo)or(snr<=snrNeg):
-            #add 1 to EID
+        if(rssi<=rssiLo)or(snr<=snrNeg): #Error 3
             EID+=1
-            #add 1 to EID3 (LEID)
             EID3+=1
-            #error 3 code
             ERR3='Err3'
-            #error 3 information
             info='LowRSSI'
-            #if only snr is triggered, info = low snr information
             if(snr<=snrNeg):
                 info='LowSNR'
-            #single info data
             data=(str(LID)+d+str(EID)+d+str(EID3)+c+ERR3+c+info+c+c+c+rxData+c+datetyme)
-            #data for csv
             datacsv=(str(LID)+c+str(EID)+d+str(EID3)+c+ERR3+c+info+c+c+c+rxData+c+datetyme)
-            #if both rssi and snr are low
             if(rssi<=rssiLo)and(snr<=snrNeg):
-                #inlude info 2
                 info2='LowSNR'
                 data=(str(LID)+d+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
                 datacsv=(str(LID)+c+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
-                #info is both
                 info='LowRSSI/LowSNR'
-            #error packet tracking
             with(open(r'radiologs/radio.err.pkt.csv', 'a')as pkt):
                 pkt.write(str(LID)+c+str(EID)+d+str(EID3)+c+info+c+str(packet)+'\n')
-            #error database input
             xcte('''INSERT INTO ERROR (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
                     VALUES (?,?,?,?,?,?,?,?,?)''',
                            (LID,EID,EID3,tyme,ERR3,rssi,snr,dayte,info))
             xcte('''INSERT INTO ERROR3 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
                     VALUES (?,?,?,?,?,?,?)''',
                            (LID,EID,EID3,tyme,rssi,snr,dayte))
-            #reinitalize the radio as a precaution
             radio_rst()
-            
-        #normal packet is received
         else:
             try:
-                #unload packet and process into data and database
-                #data is received by the radio
-                data=str(packet, 'ascii')
-                #split into parts by ,
+                data=str(packet, 'ascii') #change to utf-8
                 part=data.split(',')
-                #extract data
                 loop=int(part[0])
                 delay=int(part[1])
                 code=str(part[2])
@@ -282,20 +217,12 @@ try:
                 humi=float(part[4])
                 btemp=float(part[5])
                 txpwr=int(part[6])
-                #concatinate data
                 data=(str(LID)+d+str(loop)+c+str(delay)+c+code+c+str(temp)+tc+c+str(humi)+hd+c+str(btemp)+c+rxData+c+str(txpwr)+c+datetyme)
                 datacsv=(str(LID)+c+str(loop)+c+str(delay)+c+code+c+str(temp)+c+str(humi)+c+str(btemp)+c+rxData+c+str(txpwr)+c+datetyme)
                 xcte('''INSERT INTO RADIO (LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE)
                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
                                (LID,loop,tyme,delay,code,temp,humi,btemp,rssi,snr,txpwr,dayte))
-                                          
-            #OBSOLETE
-            #error3 is catching all ValueErrors
-            #incase of ValueError, process error 1
-            #except(ValueError):
-            
-            #incase of UnicodeDecodeError, process error 1
-            except(UnicodeDecodeError):
+            except(UnicodeDecodeError): #Error 1
                 EID+=1
                 EID1+=1
                 ERR1='Err1'
@@ -311,9 +238,7 @@ try:
                         VALUES (?,?,?,?,?,?,?)''',
                                (LID,EID,EID1,tyme,rssi,snr,dayte))  
                 radio_rst()
-            
-            #Incase of TypeError, process Error2
-            except(TypeError):
+            except(TypeError): #Error 2
                 EID+=1
                 EID2+=1
                 ERR2='Err2'
@@ -329,16 +254,10 @@ try:
                         VALUES (?,?,?,?,?,?,?)''',
                                (LID,EID,EID2,tyme,rssi,snr,dayte))  
                 radio_rst()
-        
-        #save database inputs
         save()
-        #write to csv
         with(open(r'radiologs/radio.%s.csv' %LogID, 'a') as log):
             log.write(datacsv+'\n')
-        #print data to console
         print(data)
-
-#escape    
 except(KeyboardInterrupt):
     clse()
     exit(0)

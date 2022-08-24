@@ -5,7 +5,7 @@ Radio Project
 Remote Sensor
 Marcus Dechant (c)
 Graph Webpage
-v5.6
+v5.7
 -->
 
 <html>
@@ -17,21 +17,18 @@ v5.6
         <title>Graph</title>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <link rel="stylesheet" href='../static/css/style.css'/>
-        
         <script>//auto refresh
             function timedRefresh(timeoutPeriod) {
                 setTimeout("location.reload(true);", timeoutPeriod);
-            }
-            window.onload = timedRefresh({{ refreshValue }}); //refresh value is Delay x 1000
+            } window.onload = timedRefresh({{ refreshValue }});
         </script>
-    
     </head>
     <body>
         <div class="header">
             <h1>Current Enviroment</h1>
+            <div class='small_text'>v5.7</div>
             <h3>RadioProject</br>
             Reading Graph</h3>
-            Dev v5.6
         </div>
         </br>
         <div class="nav">
@@ -44,29 +41,26 @@ v5.6
                 <button name="x" value="{{xW}}" class="button">Last Week</button>
                 <button name="x" value="{{x4W}}" class="button">4 Weeks</button>
                 <a href="/graph" class="button">All</a>
-                <!--<button name="x" value="-1" class="button">All</button>-->
             </form>
             <a href="/" class="button">Home</a>
-            <a href="/radiostat?x={{x1}}" class="button">Radio Status</a>
+            <a href="/graphs?x={{x12}}" class="button">Individual Graphs</a>
         </div>
         <div class="content">
             Last {{xH}} hour(s) </br>
-            Code: <span style="color:#{{COLOR}}">{{CODE}}</span>
+            Code: <span style="color:{{COLOR}}">{{CODE}}</span>
         </div>
         <div>
             <div class="graph" >
                 <canvas id="mainChart" ></canvas>
             </div>
             
-            <div class="graphBot">
+            <div class="small_text">
                 Reading Delay {{DELAY}} Seconds </br>
-                Loop ID: {{ITN}} </br>
-                Remote Loop ID: {{RLID}}
+                ID: {{ITN}} - {{RLID}}
             </div>
         </div>
     </body>
-        <script>
-            
+        <script> <!--JavaScript-->
             var graph = document.getElementById("mainChart");
             var line_graph = new Chart(graph, {
                 type: 'line', //graph type
@@ -76,14 +70,14 @@ v5.6
                         {   //y axis | Temp
                             label: 'Temperature ({{TEMP}}'+'\u00B0'+'C)', //legend title
                             data: {{TEMPGR}}, //y axis values
-                            borderColor: 'rgb(0, 0, 255)', //line colour
-                            backgroundColor: 'rgb(0, 0, 255)' //fill legend box
+                            borderColor: '#0000FF', //line colour
+                            backgroundColor: '#0000FF' //fill legend box
                         },
                         {   //y axis 2 | Humidity
                             label: 'Humidity ({{HUMI}}%)',
                             data: {{HUMIGR}},
-                            borderColor: 'rgb(255, 0, 0)',
-                            backgroundColor: 'rgb(255, 0, 0)'
+                            borderColor: '#FF0000',
+                            backgroundColor: '#FF0000'
                         }
                     ],
                 },
@@ -91,25 +85,25 @@ v5.6
                     plugins: { 
                         legend: { 
                             labels: { 
-                                color: 'gray', //label text color
+                                color: '#000000', //label text color
                                 }
                             }
                         },
-                    responsive: true, //css aspect ratio
-                    maintainAspectRatio: false, //css aspect ratio
+                    responsive: true,
+                    maintainAspectRatio: false,
                     elements: {
                         point: {
-                            radius: 0, //removes points (only leaves a line)
+                            radius: 0, //removes points
                             },
                         },
                     scales: { 
                         y: {
                             grid: {
-                                color: 'white', //y axis line color
-                                borderColor: 'white', //zero line color
+                                color: '#000000', //y axis line color
+                                borderColor: '#000000', //zero line color
                             },
                             ticks: {
-                                color: '#6D6D6D', //y axis label text color
+                                color: '#000000', //y axis label text color
                             },
                         },
                         x: { 
@@ -117,7 +111,7 @@ v5.6
                                 display: false, //removes vertical gridlines
                             },
                             ticks: {
-                                beginAtZero: true, //css aspect ratio
+                                beginAtZero: true,
                                 display: false, //removes x axis
                             },
                         },
@@ -125,6 +119,5 @@ v5.6
                 },
             });
         </script>
-    
     </body>
 </html>

@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+
 <!--
 Marcus Dechant (c)
-v5.4.4
+v5.4.8
 -->
+
 <html>
     <head>
         <link rel="shortcut icon" href="#">
@@ -15,15 +17,15 @@ v5.4.4
         <script>
             function timedRefresh(timeoutPeriod) {
                 setTimeout("location.reload(true);", timeoutPeriod);
-            }
-            window.onload = timedRefresh({{refreshValue}});
+            }window.onload = timedRefresh({{refreshValue}});
         </script>
     </head>
     <body>
         <div class="header">
             <h1>Radio Status</h1>
-            <h3>RadioProject</h3>
-            Dev v5.4.4
+            <div class='small_text'>v5.4.8</div>
+            <h3>RadioProject</br>
+            Status Graphs</h3>
         </div></br>
         <div class="nav">
             <form method="POST">
@@ -37,22 +39,23 @@ v5.4.4
                 <a href="/radiostat" class="button">All</a>
             </form>
             <a href="/" class="button">Home</a>
-            <a href="/graph?x={{x24}}" class="button">Reading Graph</a>
         </div>
         <div class="content">
             Last {{xH}} hour(s)
         </div>
         <div>
-            <div class="graph" >
+            <div class="graphST" >
                 <canvas id="RSSIChart" ></canvas>
             </div></br>
-            <div class="graph" >
+            <div class="graphST" >
                 <canvas id="SNRChart" ></canvas>
+            </div></br>
+            <div class="graphST" >
+                <canvas id="BTmpChart" ></canvas>
             </div>
-            <div class="graphBot">
+            <div class="small_text">
                 Reading Delay {{DELAY}} Seconds</br>
-                Loop ID: {{ITN}}</br>
-                Remote Loop ID: {{RLID}}
+                ID: {{ITN}} - {{RLID}}
             </div>
         </div>
     </body>
@@ -65,17 +68,17 @@ v5.4.4
                     datasets: [
                         {   label: 'Return Signal Strength Inicator ({{RSSI}} dBm)',
                             data: {{RSSIGR}},
-                            borderColor: 'rgb(0, 0, 255)', 
-                            backgroundColor: 'rgb(0, 0, 255)'}]},
-                options: {plugins: {legend: {labels: {color: 'gray'}}},
+                            borderColor: '#0000FF', 
+                            backgroundColor: '#0000FF'}]},
+                options: {plugins: {legend: {labels: {color: '#000000'}}},
                     responsive: true,
                     maintainAspectRatio: false,
                     elements: {point: {radius: 0}},
                     scales: {
                         y: {grid: {
-                                color: 'white',
-                                borderColor: 'white'},
-                            ticks: {color: '#6D6D6D'}},
+                                color: '#000000',
+                                borderColor: '#000000'},
+                            ticks: {color: '#000000'}},
                         x: {grid: {display: false},
                             ticks: {
                                 beginAtZero: true,
@@ -83,25 +86,52 @@ v5.4.4
                         }
                     }
                 });
-           var SNRgraph = document.getElementById("SNRChart");
+            var SNRgraph = document.getElementById("SNRChart");
             var line_graph = new Chart(SNRgraph, {
                 type: 'line',
                 data: {
                     labels: {{LID}},
-                    datasets: [
-                        {   label: 'Signal-to-Noise Ratio ({{SNR}} dB)',
-                            data: {{SNRGR}},
-                            borderColor: 'rgb(255, 0, 0)', 
-                            backgroundColor: 'rgb(255, 0, 0)'}]},
-                options: {plugins: {legend: {labels: {color: 'gray'}}},
+                    datasets: [{   
+                        label: 'Signal-to-Noise Ratio ({{SNR}} dB)',
+                        data: {{SNRGR}},
+                        borderColor: '#FF0000', 
+                        backgroundColor: '#FF0000'}]},
+                options: {
+                    plugins: {legend: {labels: {color: '#000000'}}},
                     responsive: true,
                     maintainAspectRatio: false,
                     elements: {point: {radius: 0}},
                     scales: {
                         y: {grid: {
-                                color: 'white',
-                                borderColor: 'white'},
-                            ticks: {color: '#6D6D6D'}},
+                                color: '#000000',
+                                borderColor: '#000000'},
+                            ticks: {color: '#000000'}},
+                        x: {grid: {display: false},
+                            ticks: {
+                                beginAtZero: true,
+                                display: false}}
+                        }
+                    }
+                });
+            var BTmpgraph = document.getElementById("BTmpChart");
+            var line_graph = new Chart(BTmpgraph, {
+                type: 'line',
+                data: {
+                    labels: {{LID}},
+                    datasets: [
+                        {   label: 'Pico Board Temperature ({{BTEMP}} '+'\u00B0'+'C)',
+                            data: {{BTEMPGR}},
+                            borderColor: '#00C800', 
+                            backgroundColor: '#00C800'}]},
+                options: {plugins: {legend: {labels: {color: '#000000'}}},
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {point: {radius: 0}},
+                    scales: {
+                        y: {grid: {
+                                color: '#000000',
+                                borderColor: '#000000'},
+                            ticks: {color: '#000000'}},
                         x: {grid: {display: false},
                             ticks: {
                                 beginAtZero: true,
@@ -110,6 +140,5 @@ v5.4.4
                     }
                 });
         </script>
-    
     </body>
 </html>
