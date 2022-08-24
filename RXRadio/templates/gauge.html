@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<!--
+RadioProject
+Remote Sensor
+Marcus Dechant (c)
+Gauge Webpage
+v3.3
+-->
+
+<html>
+    <head>
+        <link rel="shortcut icon" href="#">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Gauges</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gauge.js/1.3.7/gauge.min.js"></script>
+        <!-- Gauge Docs: https://bernii.github.io/gauge.js/ -->
+        <script src='../static/js/gaugeopts.0.0.1.dev.js'></script>
+        <link rel="stylesheet" href='../static/css/style.css'/>
+        <script>//refresh
+            function timedRefresh(timeoutPeriod) {
+                setTimeout("location.reload(true);", timeoutPeriod);
+            }
+            window.onload = timedRefresh({{ refreshValue }});
+        </script>
+   </head>
+   <body>
+        <div class="header">
+            <h1>Current Enviroment</h1>
+            <div class='small_text'>v3.3</div>
+            <h3>RadioProject</br>
+            Reading Gauges</h3>
+        </div>
+        <div class="nav">
+            <a href="/graph?x={{xG}}" class="button">Reading Graph</a>
+            <a href="/radiostat?x={{xR}}" class="button">Radio Status</a>
+            <!--<a href="/temp" class="button">Temp</a>-->
+        </div>
+        <div class="content">
+            <div class="gauge">
+                <div class="tGauge">
+                    <canvas id="TempGauge"></canvas>
+                    {{TEMP}} &deg;C
+                </div>
+                <div class="between">
+                    <h2>{{DATE}}</h2>
+                    Code: <span style="color:{{COLOR}}">{{CODE}}</span></br>
+                    RSSI: {{RSSI}} dBm</br>
+                    SNR: {{SNR}} dB</br>
+                    Pico Temp: {{BTEMP}} &deg;C</br>
+                    Loop ID: {{LID}}</br>
+                    Remote Loop ID: {{RLID}}</br>
+                    <span style='font-size:12pt'>Last Read at {{TIME}}</span></br>
+                </div>
+                <div class="hGauge">
+                    <canvas id="HumiGauge" ></canvas>
+                    {{HUMI}} %
+                </div>
+            </div>
+        </div>
+        <!-- JavaScript -->
+        <script>
+            var temp=document.getElementById('TempGauge');
+            var tempGauge=new Gauge(temp).setOptions(optsTemp);
+            tempGauge.maxValue=45; 
+            tempGauge.setMinValue(0);  
+            tempGauge.animationSpeed=1; 
+            tempGauge.set({{TEMP}}); 
+            var humi=document.getElementById('HumiGauge'); 
+            var humiGauge=new Gauge(humi).setOptions(optsHumi);
+            humiGauge.maxValue=100;
+            humiGauge.setMinValue(0); 
+            humiGauge.animationSpeed=1;
+            humiGauge.set({{HUMI}});
+        </script>
+    </body>
+</html>
