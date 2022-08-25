@@ -4,7 +4,7 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #RadioRX.py
-#v3.1.8
+#v3.1.9
 
 #Change LEID to ESID
 #Change Coding to UTF-8 over ASCII
@@ -12,7 +12,7 @@
 #Integrate PostgreSQL
 
 name='Radio.rx.py'
-v='v3.1.8'
+v='v3.1.9'
 cpyr=u'\u00A9'
 year=' 2022'
 author=' Marcus Dechant'
@@ -196,8 +196,8 @@ try:
                 data=(str(LID)+d+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
                 datacsv=(str(LID)+c+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
                 info='LowRSSI/LowSNR'
-            para1=str(LID),str(EID),str(EID3),str(tyme),str(ERR3),rssi,snr,dayte,info
-            para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+            para1=str(LID),str(EID),str(EID3),tyme_,str(ERR3),rssi,snr,dayte_,info
+            para2=str(LID),str(EID),str(EID3),tyme_,rssi,snr,dayte_
             exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
                     VALUES %s''', (para1,))
             exe('''INSERT INTO ERROR3 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
@@ -228,8 +228,8 @@ try:
                 info='UnicodeDecodeError'
                 data=(str(LID)+d+str(EID)+d+str(EID1)+c+ERR1+c+info+c+c+c+rxData+c+datetyme)
                 datacsv=(str(LID)+c+str(EID)+d+str(EID1)+c+ERR1+c+info+c+c+c+rxData+c+datetyme)
-                para1=str(LID),str(EID),str(EID3),tyme,ERR1,rssi,snr,dayte,info
-                para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+                para1=str(LID),str(EID),str(EID3),tyme_,ERR1,rssi,snr,dayte_,info
+                para2=str(LID),str(EID),str(EID3),tyme_,rssi,snr,dayte_
                 exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
                         VALUES %s''', (para1,))
                 exe('''INSERT INTO error1 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
@@ -244,8 +244,8 @@ try:
                 info='TypeError'
                 data=(str(LID)+d+str(EID)+d+str(EID2)+c+ERR2+c+info+c+c+c+rxData+c+datetyme)            
                 datacsv=(str(LID)+c+str(EID)+d+str(EID2)+c+ERR2+c+info+c+c+c+rxData+c+datetyme)
-                para1=str(LID),str(EID),str(EID3),tyme,ERR2,rssi,snr,dayte,info
-                para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+                para1=str(LID),str(EID),str(EID3),tyme_,ERR2,rssi,snr,dayte_,info
+                para2=str(LID),str(EID),str(EID3),tyme_,rssi,snr,dayte_
                 exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
                         VALUES %s''', (para1,))
                 exe('''INSERT INTO error2 (LID,EID,LEID,TIME,RSSI,SNR,DATE)

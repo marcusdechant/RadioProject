@@ -4,7 +4,7 @@
 #Remote Sensor Webpage
 #Marcus Dechant (c)
 #app.rx.py
-#v0.1.7
+#v1.8
 
 import sqlite3 as sql #PostgreSQL
 
