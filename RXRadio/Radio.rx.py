@@ -4,14 +4,15 @@
 #Remote Sensor
 #Marcus Dechant (c)
 #RadioRX.py
-#v3.1.7
+#v3.1.8
 
 #Change LEID to ESID
-#Need UnicodeDecodeError handling
 #Change Coding to UTF-8 over ASCII
+#Integrate dt.py
+#Integrate PostgreSQL
 
 name='Radio.rx.py'
-v='v3.1.7'
+v='v3.1.8'
 cpyr=u'\u00A9'
 year=' 2022'
 author=' Marcus Dechant'
@@ -21,21 +22,28 @@ print('\n'+verbose+'\n')
 import board as BO
 import busio as BU
 
-import sqlite3 as sql #PostgreSQL integration coming
+from psycopg2 import connect as ct #PostgresSQL db
+db='radio'
+u='radiopi'
+psswd='rf915MHz'
+host='127.0.0.1'
+port=5432
 
 from datetime import datetime #import from dt.py
 
 from digitalio import DigitalInOut as digiIO
-digIO=digiIO
 
 from os import mkdir
 from os.path import exists as path
 
+from lib.dt import tyme
+from lib.dt import dayte
+
 from adafruit_rfm9x import RFM9x as rfm9x
 
 spi=BU.SPI(BO.SCK,MOSI=BO.MOSI,MISO=BO.MISO)
-cs=digIO(BO.CE1)
-rst=digIO(BO.D25)
+cs=digiIO(BO.CE1)
+rst=digiIO(BO.D25)
 rf=915 #MHz
 radio=rfm9x(spi,cs,rst,rf)
 
@@ -63,104 +71,95 @@ hd='%'
 dbm=' dBm'
 dec=' dB'
 
-cnct=sql.connect
-database=('./database/radio.1.db')
 logs=(r'./radiologs')
-db=cnct(database)
-xcte=db.execute
-save=db.commit
-clse=db.close
-
-#main reading database
-xcte('''CREATE TABLE IF NOT EXISTS RADIO (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        RLID    INT     NOT NULL,
-        TIME    TEXT    NOT NULL,
-        DELAY   INT     NOT NULL,
-        CODE    TEXT    NOT NULL,
-        TEMP    REAL    NOT NULL,
-        HUMI    REAL    NOT NULL,
-        BTEMP   REAL    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        PWR     INT     NOT NULL,
-        DATE    TEXT    NOT NULL);''')
-
-#error database
-xcte('''CREATE TABLE IF NOT EXISTS ERROR (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        EID     INT     NOT NULL,
-        LEID    INT     NOT NULL,
-        TIME    TEXT    NOT NULL,
-        CODE    TEXT    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        DATE    TEXT    NOT NULL,
-        INFO    TEXT    NOT NULL);''')
-
-#RSSI & SNR including errors
-xcte('''CREATE TABLE IF NOT EXISTS RSALL (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        SID     INT     NOT NULL,
-        LEID    INT     NULL,
-        TIME    TEXT    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        DATE    TEXT    NOT NULL,
-        INFO    TEXT    NULL);''')
-
-#error1 only
-xcte('''CREATE TABLE IF NOT EXISTS ERROR1 (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        EID     INT     NOT NULL,
-        LEID    INT     NOT NULL,
-        TIME    TEXT    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        DATE    TEXT    NOT NULL);''')
-
-#error2 only
-xcte('''CREATE TABLE IF NOT EXISTS ERROR2 (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        EID     INT     NOT NULL,
-        LEID    INT     NOT NULL,
-        TIME    TEXT    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        DATE    TEXT    NOT NULL);''')
-
-#error3 only
-xcte('''CREATE TABLE IF NOT EXISTS ERROR3 (
-        LID     INT     NOT NULL    PRIMARY KEY,
-        EID     INT     NOT NULL,
-        LEID    INT     NOT NULL,
-        TIME    TEXT    NOT NULL,
-        RSSI    REAL    NOT NULL,
-        SNR     REAL    NOT NULL,
-        DATE    TEXT    NOT NULL);''')
-
-#database continuation
-#gets last IDs from database (LID, EID, LEIDx3)
-if(path(database)):
-    LIDlast=xcte('''SELECT LID FROM RADIO''')
-    for row in LIDlast:
-        LID=int(row[0])
-    EIDlast=xcte('''SELECT EID FROM ERROR''')
-    for row in EIDlast:
-        EID=int(row[0])
-    EID1last=xcte('''SELECT LEID FROM ERROR1''')
-    for row in EID1last:
-        EID1=int(row[0])
-    EID2last=xcte('''SELECT LEID FROM ERROR2''')
-    for row in EID2last:
-        EID2=int(row[0])
-    EID3last=xcte('''SELECT LEID FROM ERROR3''')
-    for row in EID3last:
-        EID3=int(row[0])
-
 if not(path(logs)):
     mkdir(logs)
 
+conn=ct(database=db,user=u,password=psswd,host=host,port=port)
+conn.autocommit=True
+cls=conn.close
+save=conn.commit
+helm=conn.cursor()
+exe=helm.execute
+rc=helm.rowcount
+fa=helm.fetchall
+
+ist='information_schema.tables'
+ttn='tables.table_name'
+#get last lid
+rd_tb=('''SELECT * FROM %s WHERE %s='reading';''' %(ist,ttn))
+exe(rd_tb)
+rd_ch=bool(rc)
+if(rd_ch is True):
+    exe('''SELECT LID FROM reading;''')
+    lid_last=fa()
+    for row in lid_last:
+        LID=int(row[0])
+else: #main reading table
+    tb_read='''CREATE TABLE IF NOT EXISTS reading(
+               LID     INT     NOT NULL    PRIMARY KEY,
+               RLID    INT     NOT NULL,
+               TIME    TEXT    NOT NULL,
+               DELAY   INT     NOT NULL,
+               CODE    TEXT    NOT NULL,
+               TEMP    REAL    NOT NULL,
+               HUMI    REAL    NOT NULL,
+               BTEMP   REAL    NOT NULL,
+               RSSI    REAL    NOT NULL,
+               SNR     REAL    NOT NULL,
+               PWR     INT     NOT NULL,
+               DATE    TEXT    NOT NULL);'''
+    exe(tb_read) #error table
+    tb_error='''CREATE TABLE IF NOT EXISTS error (
+                LID     INT     NOT NULL    PRIMARY KEY,
+                EID     INT     NOT NULL,
+                LEID    INT     NOT NULL,
+                TIME    TEXT    NOT NULL,
+                CODE    TEXT    NOT NULL,
+                RSSI    REAL    NOT NULL,
+                SNR     REAL    NOT NULL,
+                DATE    TEXT    NOT NULL,
+                INFO    TEXT    NOT NULL);'''
+    exe(tb_error) #rssi and snr including errors #WIP
+    tb_rsall='''CREATE TABLE IF NOT EXISTS rsall (
+                LID     INT     NOT NULL    PRIMARY KEY,
+                SID     INT     NOT NULL,
+                LEID    INT     NULL,
+                TIME    TEXT    NOT NULL,
+                RSSI    REAL    NOT NULL,
+                SNR     REAL    NOT NULL,
+                DATE    TEXT    NOT NULL,
+                INFO    TEXT    NULL);'''
+    exe(tb_rsall) #error1 table. UnicodeDecodeError.
+    tb_error1='''CREATE TABLE IF NOT EXISTS error1 (
+                 LID     INT     NOT NULL    PRIMARY KEY,
+                 EID     INT     NOT NULL,
+                 LEID    INT     NOT NULL,
+                 TIME    TEXT    NOT NULL,
+                 RSSI    REAL    NOT NULL,
+                 SNR     REAL    NOT NULL,
+                 DATE    TEXT    NOT NULL);'''
+    exe(tb_error1) #error2 table. TypeError.
+    tb_error2='''CREATE TABLE IF NOT EXISTS error2 (
+                 LID     INT     NOT NULL    PRIMARY KEY,
+                 EID     INT     NOT NULL,
+                 LEID    INT     NOT NULL,
+                 TIME    TEXT    NOT NULL,
+                 RSSI    REAL    NOT NULL,
+                 SNR     REAL    NOT NULL,
+                 DATE    TEXT    NOT NULL);'''
+    exe(tb_error2) #error3 table. Out-Of-Range.
+    tb_error3='''CREATE TABLE IF NOT EXISTS ERROR3 (
+                 LID     INT     NOT NULL    PRIMARY KEY,
+                 EID     INT     NOT NULL,
+                 LEID    INT     NOT NULL,
+                 TIME    TEXT    NOT NULL,
+                 RSSI    REAL    NOT NULL,
+                 SNR     REAL    NOT NULL,
+                 DATE    TEXT    NOT NULL);'''
+    exe(tb_error3)
+    save()
+    
 #OBSOLETE (under review)
 #should be replaced with log continuation
 while(path(r'radiologs/radio.%s.csv' %LogID)):
@@ -180,9 +179,9 @@ try:
         rssi=radio.rssi #rssi reading
         snr=radio.snr #snr reading
         rxData=(str(rssi)+c+str(snr))
-        dayte=datetime.now().strftime('%d/%m/%Y') #import from dt.py
-        tyme=datetime.now().strftime('%H:%M:%S') #import from dt.py
-        datetyme=(tyme+c+dayte)
+        dayte_=dayte()
+        tyme_=tyme()
+        datetyme=(tyme_+c+dayte_)
         if(rssi<=rssiLo)or(snr<=snrNeg): #Error 3
             EID+=1
             EID3+=1
@@ -197,14 +196,14 @@ try:
                 data=(str(LID)+d+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
                 datacsv=(str(LID)+c+str(EID)+d+str(EID3)+c+ERR3+c+info+c+info2+c+c+rxData+c+datetyme)
                 info='LowRSSI/LowSNR'
+            para1=str(LID),str(EID),str(EID3),str(tyme),str(ERR3),rssi,snr,dayte,info
+            para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+            exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
+                    VALUES %s''', (para1,))
+            exe('''INSERT INTO ERROR3 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
+                    VALUES %s''', (para2,))
             with(open(r'radiologs/radio.err.pkt.csv', 'a')as pkt):
                 pkt.write(str(LID)+c+str(EID)+d+str(EID3)+c+info+c+str(packet)+'\n')
-            xcte('''INSERT INTO ERROR (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
-                    VALUES (?,?,?,?,?,?,?,?,?)''',
-                           (LID,EID,EID3,tyme,ERR3,rssi,snr,dayte,info))
-            xcte('''INSERT INTO ERROR3 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
-                    VALUES (?,?,?,?,?,?,?)''',
-                           (LID,EID,EID3,tyme,rssi,snr,dayte))
             radio_rst()
         else:
             try:
@@ -219,9 +218,9 @@ try:
                 txpwr=int(part[6])
                 data=(str(LID)+d+str(loop)+c+str(delay)+c+code+c+str(temp)+tc+c+str(humi)+hd+c+str(btemp)+c+rxData+c+str(txpwr)+c+datetyme)
                 datacsv=(str(LID)+c+str(loop)+c+str(delay)+c+code+c+str(temp)+c+str(humi)+c+str(btemp)+c+rxData+c+str(txpwr)+c+datetyme)
-                xcte('''INSERT INTO RADIO (LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE)
-                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
-                               (LID,loop,tyme,delay,code,temp,humi,btemp,rssi,snr,txpwr,dayte))
+                para=(str(LID),str(loop),tyme_,str(delay),str(code),str(temp),str(humi),str(btemp),str(rssi),str(snr),str(txpwr),dayte_)
+                exe('''INSERT INTO reading (LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE) 
+                       VALUES %s''', (para,))
             except(UnicodeDecodeError): #Error 1
                 EID+=1
                 EID1+=1
@@ -229,15 +228,15 @@ try:
                 info='UnicodeDecodeError'
                 data=(str(LID)+d+str(EID)+d+str(EID1)+c+ERR1+c+info+c+c+c+rxData+c+datetyme)
                 datacsv=(str(LID)+c+str(EID)+d+str(EID1)+c+ERR1+c+info+c+c+c+rxData+c+datetyme)
+                para1=str(LID),str(EID),str(EID3),tyme,ERR1,rssi,snr,dayte,info
+                para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+                exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
+                        VALUES %s''', (para1,))
+                exe('''INSERT INTO error1 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
+                        VALUES %s''', (para2,))
+                radio_rst()
                 with(open(r'radiologs/radio.err.pkt.csv', 'a')as pkt):
                     pkt.write(str(LID)+c+str(EID)+d+str(EID1)+c+info+c+str(packet)+'\n')
-                xcte('''INSERT INTO ERROR (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
-                        VALUES (?,?,?,?,?,?,?,?,?)''',
-                               (LID,EID,EID1,tyme,ERR1,rssi,snr,dayte,info))
-                xcte('''INSERT INTO ERROR1 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
-                        VALUES (?,?,?,?,?,?,?)''',
-                               (LID,EID,EID1,tyme,rssi,snr,dayte))  
-                radio_rst()
             except(TypeError): #Error 2
                 EID+=1
                 EID2+=1
@@ -245,19 +244,19 @@ try:
                 info='TypeError'
                 data=(str(LID)+d+str(EID)+d+str(EID2)+c+ERR2+c+info+c+c+c+rxData+c+datetyme)            
                 datacsv=(str(LID)+c+str(EID)+d+str(EID2)+c+ERR2+c+info+c+c+c+rxData+c+datetyme)
-                with(open(r'radiologs/radio.err.pkt.csv', 'a')as pkt):
-                    pkt.write(str(LID)+c+str(EID)+d+str(EID2)+c+info+c+str(packet)+'\n')                
-                xcte('''INSERT INTO ERROR (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
-                        VALUES (?,?,?,?,?,?,?,?,?)''',
-                               (LID,EID,EID2,tyme,ERR2,rssi,snr,dayte,info))
-                xcte('''INSERT INTO ERROR2 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
-                        VALUES (?,?,?,?,?,?,?)''',
-                               (LID,EID,EID2,tyme,rssi,snr,dayte))  
+                para1=str(LID),str(EID),str(EID3),tyme,ERR2,rssi,snr,dayte,info
+                para2=str(LID),str(EID),str(EID3),tyme,rssi,snr,dayte
+                exe('''INSERT INTO error (LID,EID,LEID,TIME,CODE,RSSI,SNR,DATE,INFO)
+                        VALUES %s''', (para1,))
+                exe('''INSERT INTO error2 (LID,EID,LEID,TIME,RSSI,SNR,DATE)
+                        VALUES %s''', (para2,))  
                 radio_rst()
+                with(open(r'radiologs/radio.err.pkt.csv', 'a')as pkt):
+                    pkt.write(str(LID)+c+str(EID)+d+str(EID2)+c+info+c+str(packet)+'\n')
         save()
         with(open(r'radiologs/radio.%s.csv' %LogID, 'a') as log):
             log.write(datacsv+'\n')
         print(data)
 except(KeyboardInterrupt):
-    clse()
+    cls()
     exit(0)

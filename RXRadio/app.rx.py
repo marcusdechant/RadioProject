@@ -6,7 +6,15 @@
 #app.rx.py
 #v0.1.7
 
-import sqlite3 as sql
+import sqlite3 as sql #PostgreSQL
+
+from psycopg2 import connect as ct
+db='radio'
+u='radiopi'
+psswd='rf915MHz'
+host='127.0.0.1'
+port=5432
+
 import os
 
 from flask import Flask
@@ -18,17 +26,17 @@ from flask import url_for as url4
 
 from werkzeug.utils import secure_filename
 
-conn=sql.connect
-database=r'./database/radio.db'
+conn=ct(database=db,user=u,password=psswd,host=host,port=port)
+cls=conn.close
+helm=conn.cursor()
+exe=helm.execute
+fa=helm.fetchall
     
 app=Flask(__name__)
 
 def single_data():
-    db=conn(database)
-    xcte=db.execute
-    clse=db.close
-    curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO''')
-    data=curs.fetchall()
+    exe('''SELECT * FROM reading;''')
+    data=fa()
     for row in data:
         lid=str(row[0])
         rlid=str(row[1])
@@ -42,21 +50,17 @@ def single_data():
         snr=str(row[9])
         pwr=str(row[10])
         date=str(row[11])
-    clse()
     return(lid, rlid, tyme, dely, code, temp, humi, btmp, rssi, snr, pwr, date)
 
 def all_data():
-    db=conn(database)
-    xcte=db.execute
-    clse=db.close
     #xaxis determines how far back the graph goes.
     xaxis=request.args.get('x')
     try:
-        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
+        exe('''SELECT * FROM reading ORDER BY LID DESC LIMIT %s;''' %xaxis)
     except: #exception raised when no readings exist in database to handle this the exception is passed as all readings
         xaxis=(-1)
-        curs=xcte('''SELECT LID,RLID,TIME,DELAY,CODE,TEMP,HUMI,BTEMP,RSSI,SNR,PWR,DATE FROM RADIO ORDER BY LID DESC LIMIT %s''' %xaxis)
-    data=reversed(curs.fetchall()) #get all readings and reverse the order (SQL query returns backwards)
+        exe('''SELECT * FROM reading ORDER BY LID DESC LIMIT %s;''' %xaxis)
+    data=reversed(fa()) #get all readings and reverse the order (SQL query returns backwards)
     lidGr=[]
     rlidGr=[]
     tymeGr=[]
@@ -78,7 +82,6 @@ def all_data():
         rssiGr.append(row[8])
         snrGr.append(row[9])
         pwrGr.append(row[10])
-    clse()
     return(lidGr, rlidGr, tymeGr, delyGr, tempGr, humiGr, btmpGr, rssiGr, snrGr, pwrGr, xaxis)
 
 #/
